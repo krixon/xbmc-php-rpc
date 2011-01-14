@@ -188,22 +188,72 @@ abstract class XBMC_RPC_Client {
      * @exception XBMC_RPC_RequestException if it is not possible to retrieve a list of
      * available commands.
      * @access private
-     * @todo This needs to generate a multidimensional array via recursion. Commands
-     * can handle any depth. Although the current API only has 1 namespace level
-     * this method should be adaptable.
      */
     private function loadAvailableCommands() {
         try {
             $response = $this->sendRpc('JSONRPC.Introspect');
         } catch (XBMC_RPC_Exception $e) {
-            throw new XBMC_RPC_RequestException('Unable to retrieve list of available commands: ' . $e->getMessage());
+            throw new XBMC_RPC_RequestException(
+                'Unable to retrieve list of available commands: ' . $e->getMessage()
+            );
         }
         $commands = array();
         foreach ($response['commands'] as $command) {
-            list($namespace, $command) = explode('.', $command['command']);
-            $commands[$namespace][] = $command;
+            $path = explode('.', $command['command']);
+            if (count($path) === 1) {
+                $commands[] = $path[0];
+                continue;
+            }
+            $command = array_pop($path);
+            $array = array();
+            $reference =& $array;
+            foreach ($path as $i => $key) {
+                if (is_numeric($key) && intval($key) > 0 || $key === '0') {
+                    $key = intval($key);
+                }
+                if ($i === count($path) - 1) {
+                    $reference[$key] = array($command);
+                } else {
+                    if (!isset($reference[$key])) {
+                        $reference[$key] = array();
+                    }
+                    $reference =& $reference[$key];
+                }
+            }
+            $commands = $this->mergeCommandArrays($commands, $array);
         }
         return $commands;
+    }
+    
+    /**
+     * Recursively merges the supplied arrays whilst ensuring that commands are
+     * not duplicated within a namespace.
+     *
+     * Note that array_merge_recursive is not suitable here as it does not ensure
+     * that values are distinct within an array.
+     *
+     * @param mixed $base The base array into which $append will be merged.
+     * @param mixed $append The array to merge into $base.
+     * @return mixed The merged array of commands and namespaces.
+     * @access private
+     */
+    private function mergeCommandArrays(array $base, array $append) {
+        foreach ($append as $key => $value) {
+            if (!array_key_exists($key, $base) && !is_numeric($key)) {
+                $base[$key] = $append[$key];
+                continue;
+            }
+            if (is_array($value) || is_array($base[$key])) {
+                $base[$key] = $this->mergeCommandArrays($base[$key], $append[$key]);
+            } elseif (is_numeric($key)) {
+                if (!in_array($value, $base)) {
+                    $base[] = $value;
+                }
+            } else {
+                $base[$key] = $value;
+            }
+        }
+        return $base;
     }
     
     /**
