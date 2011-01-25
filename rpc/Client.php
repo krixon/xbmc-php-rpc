@@ -156,7 +156,7 @@ abstract class XBMC_RPC_Client {
      * @return bool True of the reponse is valid, false if not.
      * @access private
      */
-    private function checkResponse($response, $rpcId) {
+    private function checkResponse(XBMC_RPC_Response $response, $rpcId) {
         return ($response->getId() == $rpcId);
     }
     
