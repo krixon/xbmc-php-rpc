@@ -151,8 +151,8 @@ abstract class XBMC_RPC_Client {
     /**
      * Ensures that the recieved response from a remote procedure call is valid.
      *
-     * $param stdClass $response A stdClass object encapsulating remote procedure
-     * call response data as return from Client::sendRequest().
+     * $param XBMC_RPC_Response $response A response object encapsulating remote
+     * procedure call response data as returned from Client::sendRequest().
      * @return bool True of the reponse is valid, false if not.
      * @access private
      */
