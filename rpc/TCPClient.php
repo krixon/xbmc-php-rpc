@@ -1,5 +1,7 @@
 <?php
 
+require_once 'Client.php';
+
 class XBMC_RPC_TCPClient extends XBMC_RPC_Client {
     
     /**
