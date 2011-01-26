@@ -51,25 +51,21 @@ class XBMC_RPC_TCPClient extends XBMC_RPC_Client {
      *
      * @param string $json A JSON-encoded string representing the remote procedure call.
      * This string should conform to the JSON-RPC 2.0 specification.
+     * @param string $rpcId The unique ID of the remote procedure call.
      * @return string The JSON-encoded response string from the server.
      * @exception XBMC_RPC_RequestException if it was not possible to make the request.
      * @access protected
      * @link http://groups.google.com/group/json-rpc/web/json-rpc-2-0 JSON-RPC 2.0 specification
      */
-    protected function sendRequest($json) {
+    protected function sendRequest($json, $rpcId) {
         $this->prepareConnection();
         if (!$this->canConnect()) {
             throw new XBMC_RPC_ConnectionException('Lost connection to XBMC server');
         }
         fwrite($this->fp, $json);
-        $result = '';
-        $open = $close = 0;
         while (true) {
-            $buffer = fgets($this->fp, 512);
-            $open += substr_count($buffer, '{');
-            $close += substr_count($buffer, '}');
-            $result .= $buffer;
-            if ($open == $close) {
+            $result = $this->readJsonObject();
+            if (strpos($result, '"id" : "' . $rpcId . '"') !== false) {
                 break;
             }
         }
@@ -85,6 +81,27 @@ class XBMC_RPC_TCPClient extends XBMC_RPC_Client {
      */
     private function canConnect() {
         return is_resource($this->fp);
+    }
+    
+    /**
+     * Reads a single JSON object from the socket and returns it.
+     *
+     * @return string The JSON object string from the server.
+     * @access private
+     */
+    private function readJsonObject() {
+        $result = '';
+        $open = $close = 0;
+        while (true) {
+            $buffer = fgets($this->fp, 512);
+            $open += substr_count($buffer, '{');
+            $close += substr_count($buffer, '}');
+            $result .= $buffer;
+            if ($open == $close) {
+                break;
+            }
+        }
+        return $result;
     }
     
 }

@@ -84,12 +84,13 @@ class XBMC_RPC_HTTPClient extends XBMC_RPC_Client {
      *
      * @param string $json A JSON-encoded string representing the remote procedure call.
      * This string should conform to the JSON-RPC 2.0 specification.
+     * @param string $rpcId The unique ID of the remote procedure call.
      * @return string The JSON-encoded response string from the server.
      * @exception XBMC_RPC_RequestException if it was not possible to make the request.
      * @access protected
      * @link http://groups.google.com/group/json-rpc/web/json-rpc-2-0 JSON-RPC 2.0 specification
      */
-    protected function sendRequest($json) {
+    protected function sendRequest($json, $rpcId) {
         if (empty($this->curlResource)) {
             $this->curlResource = $this->createCurlResource();
         }
