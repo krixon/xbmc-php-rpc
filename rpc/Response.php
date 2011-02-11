@@ -54,6 +54,12 @@ class XBMC_RPC_Response {
      * associative array.
      */
     private function decodeResponse($json) {
+        if (extension_loaded('mbstring')) {
+            $encoding = mb_detect_encoding($json, 'ASCII,UTF-8,ISO-8859-1,windows-1252,iso-8859-15');
+            if (!in_array($encoding, array('UTF-8', 'ASCII'))) {
+                $json = mb_convert_encoding($json, 'UTF-8', $encoding);
+            }
+        }
         return json_decode($json, true);
     }
     
