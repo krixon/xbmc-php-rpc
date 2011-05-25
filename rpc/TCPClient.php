@@ -68,7 +68,7 @@ class XBMC_RPC_TCPClient extends XBMC_RPC_Client {
             if (strpos($result, '"id" : "' . $rpcId . '"') !== false) {
                 break;
             }
-            if (strpos($result, '"id:"' . $rpcId . '"') !== false) {
+            if (strpos($result, '"id":"' . $rpcId . '"') !== false) {
                 break;
             }
         }
