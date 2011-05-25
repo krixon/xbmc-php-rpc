@@ -65,7 +65,6 @@ class XBMC_RPC_TCPClient extends XBMC_RPC_Client {
         fwrite($this->fp, $json);
         while (true) {
             $result = $this->readJsonObject();
-            print $result;
             if (strpos($result, '"id" : "' . $rpcId . '"') !== false) {
                 break;
             }
