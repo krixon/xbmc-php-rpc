@@ -24,6 +24,14 @@ abstract class XBMC_RPC_Client {
     private $rootNamespace;
     
     /**
+     * @var bool A flag to indicate if the JSON-RPC version is legacy, ie before
+     * the XBMC Eden updates. This can be used to determine the format of commands
+     * to be used with this library, allowing client code to support legacy systems.
+     * @access private
+     */
+    private $isLegacy = false;
+    
+    /**
      * Constructor.
      *
      * Connects to the server and populates a list of available commands by
@@ -46,6 +54,7 @@ abstract class XBMC_RPC_Client {
         $this->server = $server;
         $this->prepareConnection();
         $this->assertCanConnect();
+        $this->createRootNamespace();
     }
     
     /**
@@ -59,9 +68,6 @@ abstract class XBMC_RPC_Client {
      * @access public
      */
     public function __call($name, array $arguments) {
-        if (!isset($this->rootNamespace)) {
-            $this->createRootNamespace();
-        }
         return call_user_func_array(array($this->rootNamespace, $name), $arguments);
     }
     
@@ -75,9 +81,6 @@ abstract class XBMC_RPC_Client {
      * @access public
      */
     public function __get($name) {
-        if (!isset($this->rootNamespace)) {
-            $this->createRootNamespace();
-        }
         return $this->rootNamespace->$name;
     }
     
@@ -91,6 +94,18 @@ abstract class XBMC_RPC_Client {
      */
     public function executeCommand(XBMC_RPC_Command $command) {
         return $this->sendRpc($command->getFullName(), $command->getArguments());
+    }
+    
+    /**
+     * Determines if the XBMC system to which the client is connected is legacy
+     * (pre Eden) or not. This is useful because the format of commands/params
+     * is different in the Eden RPC implementation.
+     *
+     * @return bool True if the system is legacy, false if not.
+     * @access public
+     */
+    public function isLegacy() {
+        return $this->isLegacy;
     }
     
     /**
@@ -198,32 +213,64 @@ abstract class XBMC_RPC_Client {
                 'Unable to retrieve list of available commands: ' . $e->getMessage()
             );
         }
+        if (isset($response['commands'])) {
+            $this->isLegacy = true;
+            return $this->loadAvailableCommandsLegacy($response);
+        }
         $commands = array();
-        foreach ($response['commands'] as $command) {
-            $path = explode('.', $command['command']);
-            if (count($path) === 1) {
-                $commands[] = $path[0];
-                continue;
-            }
-            $command = array_pop($path);
-            $array = array();
-            $reference =& $array;
-            foreach ($path as $i => $key) {
-                if (is_numeric($key) && intval($key) > 0 || $key === '0') {
-                    $key = intval($key);
-                }
-                if ($i === count($path) - 1) {
-                    $reference[$key] = array($command);
-                } else {
-                    if (!isset($reference[$key])) {
-                        $reference[$key] = array();
-                    }
-                    $reference =& $reference[$key];
-                }
-            }
+        foreach (array_keys($response['methods']) as $command) {
+            $array = $this->commandStringToArray($command);
             $commands = $this->mergeCommandArrays($commands, $array);
         }
         return $commands;
+    }
+    
+    /**
+     * Retrieves an array of commands by requesting the RPC server to introspect.
+     *
+     * This method supports the legacy implementation of XBMC's RPC.
+     * 
+     * @return mixed An array of available commands which may be executed on the server.
+     * @access private
+     */
+    private function loadAvailableCommandsLegacy($response) {
+        $commands = array();
+        foreach ($response['commands'] as $command) {
+            $array = $this->commandStringToArray($command['command']);
+            $commands = $this->mergeCommandArrays($commands, $array);
+        }
+        return $commands;
+    }
+    
+    /**
+     * Converts a dot-delimited command name to a multidimensional array format.
+     *
+     * @return mixed An array representing the command.
+     * @access private
+     */
+    private function commandStringToArray($command) {
+        $path = explode('.', $command);
+        if (count($path) === 1) {
+            $commands[] = $path[0];
+            continue;
+        }
+        $command = array_pop($path);
+        $array = array();
+        $reference =& $array;
+        foreach ($path as $i => $key) {
+            if (is_numeric($key) && intval($key) > 0 || $key === '0') {
+                $key = intval($key);
+            }
+            if ($i === count($path) - 1) {
+                $reference[$key] = array($command);
+            } else {
+                if (!isset($reference[$key])) {
+                    $reference[$key] = array();
+                }
+                $reference =& $reference[$key];
+            }
+        }
+        return $array;
     }
     
     /**
