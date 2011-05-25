@@ -1,9 +1,9 @@
 <?php
 
-$params = 'localhost:9090';
-require_once 'rpc/TCPClient.php';
+$params = 'xbmc:xbmc@localhost:8080';
+require_once 'rpc/HTTPClient.php';
 try {
-    $rpc = new XBMC_RPC_TCPClient($params);
+    $rpc = new XBMC_RPC_HTTPClient($params);
 } catch (XBMC_RPC_ConnectionException $e) {
     die($e->getMessage());
 }
