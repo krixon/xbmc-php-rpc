@@ -91,15 +91,18 @@ class XBMC_RPC_TCPClient extends XBMC_RPC_Client {
      *
      * @return string The JSON object string from the server.
      * @access private
+     * @todo Account for { and } characters within strings in the returned content.
      */
     private function readJsonObject() {
         $result = '';
         $open = $close = 0;
-        while (true) {
-            $buffer = fgets($this->fp, 512);
-            $open += substr_count($buffer, '{');
-            $close += substr_count($buffer, '}');
-            $result .= $buffer;
+        while (false !== ($char = fgetc($this->fp))) {
+            if ($char == '{') {
+                ++$open;
+            } elseif ($char == '}') {
+                ++$close;
+            }
+            $result .= $char;
             if ($open == $close) {
                 break;
             }
