@@ -9,8 +9,11 @@ try {
 }
 
 try {
-    $params = $rpc->isLegacy() ? array('System.Time') : array('labels' => array('System.Time'));
-    $response = $rpc->System->GetInfoLabels($params);
+    if ($rpc->isLegacy()) {
+        $response = $rpc->System->GetInfoLabels(array('System.Time'));
+    } else {
+        $response = $rpc->XBMC->GetInfoLabels(array('labels' => array('System.Time')));
+    }
 } catch (XBMC_RPC_Exception $e) {
     die($e->getMessage());
 }
@@ -35,4 +38,3 @@ if ($rpc->isLegacy()) {
         );
     }
 }
-

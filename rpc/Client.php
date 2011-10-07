@@ -314,7 +314,7 @@ abstract class XBMC_RPC_Client {
      * @exception XBMC_RPC_ResponseException if the response was not being properly received.
      * @access private
      */
-    private function sendRpc($command, $params = null) {
+    private function sendRpc($command, $params = array()) {
         $rpcId = $this->getRpcId();
         $json = $this->buildJson($command, $params, $rpcId);
         $response = new XBMC_RPC_Response($this->sendRequest($json, $rpcId));

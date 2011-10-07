@@ -56,13 +56,8 @@ class XBMC_RPC_Command {
      * @access public
      */
     public function execute(array $arguments = array()) {
-        switch (count($arguments)) {
-            case 0:
-                $arguments = null;
-                break;
-            case 1:
-                $arguments = array_shift($arguments);
-                break;
+        if (count($arguments) == 1) {
+            $arguments = array_shift($arguments);
         }
         $this->arguments = $arguments;
         return $this->client->executeCommand($this);
