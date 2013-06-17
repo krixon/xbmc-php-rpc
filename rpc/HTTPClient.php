@@ -95,6 +95,7 @@ class XBMC_RPC_HTTPClient extends XBMC_RPC_Client {
             $this->curlResource = $this->createCurlResource();
         }
         curl_setopt($this->curlResource, CURLOPT_POSTFIELDS, $json);
+        curl_setopt($this->curlResource, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
         if (!$response = curl_exec($this->curlResource)) {
             throw new XBMC_RPC_RequestException('Could not make a request the server');
         }
