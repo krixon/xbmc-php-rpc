@@ -115,7 +115,7 @@ class XBMC_RPC_HTTPClient extends XBMC_RPC_Client {
             $credentials = $parameters['user'];
             $credentials .= empty($parameters['pass']) ? '@' : ':' . $parameters['pass'] . '@';
         }
-        return sprintf('http://%s%s:%d/jsonrpc', $credentials, $parameters['host'], $parameters['port']);
+        return sprintf('http://%s%s:%d%sjsonrpc', $credentials, $parameters['host'], $parameters['port'], $parameters['path']);
     }
     
     /**

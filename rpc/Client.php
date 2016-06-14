@@ -252,7 +252,7 @@ abstract class XBMC_RPC_Client {
         $path = explode('.', $command);
         if (count($path) === 1) {
             $commands[] = $path[0];
-            continue;
+            return array();
         }
         $command = array_pop($path);
         $array = array();

@@ -78,7 +78,8 @@ class XBMC_RPC_Server {
             'host' => 'localhost',
             'port' => 8080,
             'user' => null,
-            'pass' => null
+            'pass' => null,
+            'path' => '/'
         );
         $parameters = array_intersect_key(array_merge($defaults, $parameters), $defaults);
         return $parameters;
